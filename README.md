@@ -30,6 +30,24 @@ OR:
 
 ```python -m smartcab.agent```
 
-## Develop
+## Task 1
 
-Open `agent.py` and implement `LearningAgent`. Follow the `TODO`s in there for further instructions.
+### Implement a basic driving agent
+
+Download smartcab.zip, unzip and open the template Python file agent.py (do not modify any other file). Perform the following tasks to build your agent, referring to instructions mentioned in README.md as well as inline comments in agent.py.
+
+Also create a project report (e.g. Word or Google doc), and start addressing the questions indicated in italics below. When you have finished the project, save/download the report as a PDF and turn it in with your code.
+
+Implement the basic driving agent, which processes the following inputs at each time step:
+
+Next waypoint location, relative to its current location and heading,
+Intersection state (traffic light and presence of cars), and,
+Current deadline value (time steps remaining),
+And produces some random move/action (None, 'forward', 'left', 'right'). Don’t try to implement the correct strategy! That’s exactly what your agent is supposed to learn.
+
+Run this agent within the simulation environment with enforce_deadline set to False (see run function in agent.py), and observe how it performs. In this mode, the agent is given unlimited time to reach the destination. The current state, action taken by your agent and reward/penalty earned are shown in the simulator.
+
+In your report, mention what you see in the agent’s behavior. Does it eventually make it to the target location?
+
+
+
