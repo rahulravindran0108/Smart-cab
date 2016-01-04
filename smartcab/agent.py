@@ -12,13 +12,23 @@ class LearningAgent(Agent):
     """An agent that learns to drive in the smartcab world."""
 
     def __init__(self, env):
-        super(LearningAgent, self).__init__(env)  # sets self.env = env, state = None, next_waypoint = None, and a default color
-        self.color = 'blue'  # override color
+        """
+        initializes the environment variables
+        input: env, initializes the environment variable for sensing
+
+        working: also responsible for initializing the color of the car,
+        initializing the route planner and the reward and previous action.
+        """
+        super(LearningAgent, self).__init__(env)  
+        self.color = 'black'  
         self.planner = RoutePlanner(self.env, self)  # simple route planner to get next_waypoint
         self.previous_reward = 0
         self.previous_action = None
 
     def reset(self, destination=None):
+        """
+        reset values to start a new trial run
+        """
         self.planner.route_to(destination)
         # TODO: Prepare for a new trip; reset any variables here, if required
         self.previous_reward = 0
@@ -26,6 +36,9 @@ class LearningAgent(Agent):
         self.state = None
 
     def update(self, t):
+        """
+        Main update method that is responsible for updating the agent action.
+        """
         # Gather inputs
         self.next_waypoint = self.planner.next_waypoint()  # from route planner, also displayed by simulator
         inputs = self.env.sense(self)
@@ -42,7 +55,7 @@ class LearningAgent(Agent):
 
         possible_actions = []
         if(current_env_state['light'] == 'red'):
-            if(current_env_state['oncoming'] != 'left' and current_env_state['left'] != 'forward'):
+            if(current_env_state['left'] != 'forward'):
                 possible_actions = ['right']
         else:
             # traffic ligh is gree and now check for oncoming
@@ -92,7 +105,7 @@ def run():
 
     # Now simulate it
     sim = Simulator(e, update_delay=1.0)  # reduce update_delay to speed up simulation
-    sim.run(n_trials=10)  # press Esc or close pygame window to quit
+    sim.run(n_trials=100)  # press Esc or close pygame window to quit
 
 
 if __name__ == '__main__':

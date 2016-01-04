@@ -5,6 +5,7 @@ from simulator import Simulator
 import math
 from collections import namedtuple
 import pprint
+from scipy import constants as sc
 
 class QLearningAgent(Agent):
     """An agent that learns to drive in the smartcab world using Q learning"""
@@ -15,21 +16,22 @@ class QLearningAgent(Agent):
         self.planner = RoutePlanner(self.env, self)  # simple route planner to get next_waypoint
         ##initialize q table here
         self.qDict = dict()
-        self.alpha    = 0.1
-        self.epsilon  = 0.7 ##initial probability of flipping the coin
-        self.gamma    = 0.9
+        self.alpha    = 0.3
+        self.epsilon  = 0.3 ##initial probability of flipping the coin
+        self.gamma    = 0.7
         self.discount = self.gamma
         self.previous_state = None
         self.state = None
         self.previous_action = None
         self.deadline = self.env.get_deadline(self)
+        self.rewards = 0
 
     def flipCoin(self, p ):
         r = random.random()
         return r < p
 
     def setEpsilon(self):
-        if self.getCurrentDeadline() < 10:
+        if self.getCurrentDeadline() < 8:
             self.epsilon = 0.05
 
     def getCurrentDeadline(self):
@@ -43,7 +45,7 @@ class QLearningAgent(Agent):
         self.previous_state = None
         self.state = None
         self.previous_action = None
-        self.epsilon = 0.7
+        self.epsilon = 0.5
 
     def getLegalActions(self, state):
         """
@@ -52,17 +54,16 @@ class QLearningAgent(Agent):
         current_env_state = self.env.sense(self)
         possible_actions = []
         if(current_env_state['light'] == 'red'):
-            if(current_env_state['oncoming'] != 'left' and current_env_state['left'] != 'forward'):
+            if(current_env_state['left'] != 'forward'):
                 possible_actions = ['right', None]
         else:
-                # traffic ligh is gree and now check for oncoming
-                #if no oncoming 
-            if(current_env_state['oncoming'] == 'forward'):
+            if(current_env_state['oncoming'] == 'forward' or current_env_state['oncoming'] == 'right'):
                 possible_actions = [ 'forward','right']
             else:
                 possible_actions = ['right','forward','left']
         if possible_actions == []:
         	possible_actions = [None]
+
         return possible_actions
 
     ##gets the q value for a particulat state and action
@@ -73,7 +74,7 @@ class QLearningAgent(Agent):
 
         returns 0 if the value is not present in the dictionary.
         """
-        return self.qDict.get((state, action), random.uniform(0.5, 1.0))  ##return the value from the qDict, default to 0 if the key isnt in the dict
+        return self.qDict.get((state, action), 300)  ##return the value from the qDict, default to 0 if the key isnt in the dict
 
     def getValue(self, state):
         """
@@ -96,6 +97,13 @@ class QLearningAgent(Agent):
                     bestQValue = self.getQValue(state, action)
 
             return bestQValue
+
+    def boltzmanExploration(self):
+    	"""
+    	does a boltzmanExploration
+    	"""
+
+
 
     def getPolicy(self, state):
         """
@@ -131,9 +139,9 @@ class QLearningAgent(Agent):
 
         This is useful for creating the q dictionary.
         """
-        State = namedtuple("State", ["light","oncoming","right","left"])
-        return State(light = state['light'],oncoming = state['oncoming'],
-                            right = state['right'], left = state['left'])
+        State = namedtuple("State", ["light","next_waypoint"])
+        return State(light = state['light'],
+        					next_waypoint = self.planner.next_waypoint())
 
     def update(self, t):
         """
@@ -154,6 +162,8 @@ class QLearningAgent(Agent):
 
         ##perform the action and now get the reward
         reward = self.env.act(self, action)
+
+        self.rewards += reward
 
         ## in case of initial configuration don't update the q table, else update q table
         if self.previous_state!= None:
@@ -201,6 +211,6 @@ class QLearningAgent(Agent):
          it will be called on your behalf
         """
     
-        if((state, action) not in self.qDict): ##if the (state, action) tuple is not in the dictionary, set the tuple's value to 0 within the dict
-            self.qDict[(state, action)] = 0
+        if((state, action) not in self.qDict): 
+            self.qDict[(state, action)] = 300	
         self.qDict[(state, action)] = self.qDict[(state, action)] + self.alpha*(reward + self.discount*self.getValue(nextState) - self.qDict[(state, action)]) ##set the previous state's qValue to itself plus alpha*(reward + gamma*value of next state - old q value)
