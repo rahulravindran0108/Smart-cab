@@ -117,6 +117,8 @@ class Environment(object):
             if self.enforce_deadline and self.agent_states[self.primary_agent]['deadline'] <= 0:
                 self.done = True
                 print "Environment.reset(): Primary agent could not reach destination within deadline!"
+                with open("testResults.txt", "a") as myfile:
+                    myfile.write("Primary agent could not reach destination within deadline!\n")
             self.agent_states[self.primary_agent]['deadline'] -= 1
 
     def sense(self, agent):
@@ -192,6 +194,8 @@ class Environment(object):
                     reward += 10  # bonus
                 self.done = True
                 print "Environment.act(): Primary agent has reached destination!"  # [debug]
+                with open("testResults.txt", "a") as myfile:
+                    myfile.write("Primary agent has reached destination!\n")
             self.status_text = "state: {}\naction: {}\nreward: {}".format(agent.get_state(), action, reward)
             #print "Environment.act() [POST]: location: {}, heading: {}, action: {}, reward: {}".format(location, heading, action, reward)  # [debug]
 

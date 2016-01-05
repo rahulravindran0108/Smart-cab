@@ -131,3 +131,19 @@ Report what changes you made to your basic implementation of Q-Learning to achie
 Does your agent get close to finding an optimal policy, i.e. reach the destination in the minimum possible time, and not incur any penalties?
 
 
+### Identifying the states
+
+For our Q-Learning agent, the states that best represent the car's current state would be the location of the destination, the cab's current location and the next waypoint. Say, that the goal was just forward, and your car needed to go straight, the most important parameters needed are the once mentioned above.
+
+### Working of the Q-learning agent
+
+The Q-Learning agent works on the basis of the Q-Learning strategy. The code for such an agent is present in the file `QLearning.py`.
+
+### Test Results for the Q-learning agent
+
+After having gone through the trial, I noticed a 50% success rate by initializaing the following values:
+alpha = 0.2
+gamma = 0.8
+epsilon = 0.5 and decayed to 0.05 when deadline is less than 15 steps.
+
+

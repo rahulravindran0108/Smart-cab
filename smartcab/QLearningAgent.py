@@ -16,9 +16,9 @@ class QLearningAgent(Agent):
         self.planner = RoutePlanner(self.env, self)  # simple route planner to get next_waypoint
         ##initialize q table here
         self.qDict = dict()
-        self.alpha    = 0.3
-        self.epsilon  = 0.3 ##initial probability of flipping the coin
-        self.gamma    = 0.7
+        self.alpha    = 0.2
+        self.epsilon  = 0.5 ##initial probability of flipping the coin
+        self.gamma    = 0.8
         self.discount = self.gamma
         self.previous_state = None
         self.state = None
@@ -31,7 +31,7 @@ class QLearningAgent(Agent):
         return r < p
 
     def setEpsilon(self):
-        if self.getCurrentDeadline() < 8:
+        if self.getCurrentDeadline() < 15:
             self.epsilon = 0.05
 
     def getCurrentDeadline(self):
@@ -139,14 +139,18 @@ class QLearningAgent(Agent):
 
         This is useful for creating the q dictionary.
         """
-        State = namedtuple("State", ["light","next_waypoint"])
-        return State(light = state['light'],
-        					next_waypoint = self.planner.next_waypoint())
+        ## harnesss 'destination': (4, 5), 'deadline': 20, 'location': (7, 1), 'heading': (0, 1)
+
+        State = namedtuple("State", ["next_waypoint","destination","location"])
+        return State(next_waypoint = self.planner.next_waypoint(),
+        					destination = self.env.agent_states[self]['destination'],
+        					location = self.env.agent_states[self]['location'])
 
     def update(self, t):
         """
         This is the overridden mehtod that basically peforms the necessary update
         """
+        pprint.pprint(self.env.agent_states)
         
         self.next_waypoint = self.planner.next_waypoint()  # from route planner, also displayed by simulator
         inputs = self.env.sense(self)
