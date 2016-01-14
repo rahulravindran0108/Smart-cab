@@ -55,15 +55,15 @@ class LearningAgent(Agent):
 
         possible_actions = []
         if(current_env_state['light'] == 'red'):
-            if(current_env_state['left'] != 'forward'):
-                possible_actions = ['right']
+            if(current_env_state['oncoming'] != 'left'):
+                possible_actions = ['right', None]
         else:
             # traffic ligh is gree and now check for oncoming
             #if no oncoming 
             if(current_env_state['oncoming'] == 'forward'):
                 possible_actions = [ 'forward','right']
             else:
-                possible_actions = ['right','forward']
+                possible_actions = ['right','forward', 'left']
         
         # TODO: Select action according to your policy
         if possible_actions != [] and self.state == 'Random':
@@ -95,17 +95,22 @@ class LearningAgent(Agent):
         print "LearningAgent.update(): deadline = {}, inputs = {}, action = {}, reward = {}".format(deadline, inputs, action, reward)  # [debug]
 
 
+def allPossibleStates():
+    states = ["next_waypoint","destination","location",
+                "destination","light","oncoming","left","right","heading"]
+    return states
+
 def run():
     """Run the agent for a finite number of trials."""
 
-    # Set up environment and agent
     e = Environment()  # create environment (also adds some dummy traffic)
     a = e.create_agent(QLearningAgent)  # create agent
     e.set_primary_agent(a, enforce_deadline=True)  # set agent to track
-
-    # Now simulate it
-    sim = Simulator(e, update_delay=1.0)  # reduce update_delay to speed up simulation
+        # Now simulate it
+    sim = Simulator(e, update_delay=0.00001)  # reduce update_delay to speed up simulation
     sim.run(n_trials=100)  # press Esc or close pygame window to quit
+
+    
 
 
 if __name__ == '__main__':

@@ -16,15 +16,17 @@ class QLearningAgent(Agent):
         self.planner = RoutePlanner(self.env, self)  # simple route planner to get next_waypoint
         ##initialize q table here
         self.qDict = dict()
-        self.alpha    = 0.2
-        self.epsilon  = 0.5 ##initial probability of flipping the coin
-        self.gamma    = 0.8
+        self.alpha    = 0.9
+        self.epsilon  = 0.0 ##initial probability of flipping the coin
+        self.gamma    = 0.35
         self.discount = self.gamma
         self.previous_state = None
         self.state = None
         self.previous_action = None
-        self.deadline = self.env.get_deadline(self)
-        self.rewards = 0
+        self.deadline = self.env.get_deadline(self)       
+        self.T = 1.987
+        self.previous_reward = None
+
 
     def flipCoin(self, p ):
         r = random.random()
@@ -32,7 +34,7 @@ class QLearningAgent(Agent):
 
     def setEpsilon(self):
         if self.getCurrentDeadline() < 15:
-            self.epsilon = 0.05
+            self.epsilon = 0.00
 
     def getCurrentDeadline(self):
         return self.env.get_deadline(self)
@@ -45,26 +47,13 @@ class QLearningAgent(Agent):
         self.previous_state = None
         self.state = None
         self.previous_action = None
-        self.epsilon = 0.5
+        self.epsilon = 0.0
 
     def getLegalActions(self, state):
         """
         returns the legal action from the current state
         """
-        current_env_state = self.env.sense(self)
-        possible_actions = []
-        if(current_env_state['light'] == 'red'):
-            if(current_env_state['left'] != 'forward'):
-                possible_actions = ['right', None]
-        else:
-            if(current_env_state['oncoming'] == 'forward' or current_env_state['oncoming'] == 'right'):
-                possible_actions = [ 'forward','right']
-            else:
-                possible_actions = ['right','forward','left']
-        if possible_actions == []:
-        	possible_actions = [None]
-
-        return possible_actions
+        return ['forward', 'left', 'right', None]
 
     ##gets the q value for a particulat state and action
     def getQValue(self, state, action):
@@ -74,7 +63,7 @@ class QLearningAgent(Agent):
 
         returns 0 if the value is not present in the dictionary.
         """
-        return self.qDict.get((state, action), 300)  ##return the value from the qDict, default to 0 if the key isnt in the dict
+        return self.qDict.get((state, action), 20.0)  ##return the value from the qDict, default to 0 if the key isnt in the dict
 
     def getValue(self, state):
         """
@@ -86,24 +75,34 @@ class QLearningAgent(Agent):
         """
         legalActions = self.getLegalActions(state) 
         bestQValue = - 999999999
-        ## If there are no legal actions simply return 0
-        if not legalActions:
-            return 0.0
-        else:
-            #search all possible actions
-            for action in legalActions:
-                #for each action check if the q value for the action is greater than minus infinity
-                if(self.getQValue(state, action) > bestQValue):
-                    bestQValue = self.getQValue(state, action)
+        
+        for action in legalActions:
+            #for each action check if the q value for the action is greater than minus infinity
+            if(self.getQValue(state, action) > bestQValue):
+                bestQValue = self.getQValue(state, action)
 
-            return bestQValue
+        return bestQValue
 
     def boltzmanExploration(self):
     	"""
-    	does a boltzmanExploration
+    	Does a Boltzman Exploration 
+
+    	p(s,a) = (e^(Q(s,a)/t))/summation(a*(Q(s,a)/t))
     	"""
+        summation = 0.0
+        bestAction = None
+        bestProbability = -1
+        possible_actions = self.getLegalActions(self.state)
+        print possible_actions
+        for x in possible_actions:
+            summation+=math.exp(self.getQValue(self.state, x)/self.T)
 
-
+        for x in possible_actions:
+            probability = math.exp(self.getQValue(self.state, x)/self.T)/summation
+            if probability > bestProbability:
+                bestAction = x
+        
+        print bestAction
 
     def getPolicy(self, state):
         """
@@ -130,6 +129,26 @@ class QLearningAgent(Agent):
                     bestAction = action
         return bestAction
 
+    def getallPossibleValues(self,label):
+        if label == "next_waypoint":
+            return self.planner.next_waypoint()
+        elif label == "destination":
+            return self.env.agent_states[self]['destination']
+        elif label == "light":
+            return self.env.sense(self)['light']
+        elif label == "oncoming":
+            return self.env.sense(self)['oncoming']
+        elif label == "left":
+            return self.env.sense(self)['left']
+        elif label == "right":
+            return self.env.sense(self)['right']
+        elif label == "location":
+            return self.env.agent_states[self]['location']
+        elif label == "heading":
+            return self.env.agent_states[self]['heading']
+
+
+
     def makeState(self, state):
         """
         This function makes a state and returns 
@@ -140,11 +159,17 @@ class QLearningAgent(Agent):
         This is useful for creating the q dictionary.
         """
         ## harnesss 'destination': (4, 5), 'deadline': 20, 'location': (7, 1), 'heading': (0, 1)
-
-        State = namedtuple("State", ["next_waypoint","destination","location"])
-        return State(next_waypoint = self.planner.next_waypoint(),
-        					destination = self.env.agent_states[self]['destination'],
-        					location = self.env.agent_states[self]['location'])
+        State = namedtuple("State", ["light","next_waypoint"])
+        return State(light = state['light'],
+                        next_waypoint = self.planner.next_waypoint())
+        # State = namedtuple("State", ["next_waypoint","destination","location"])
+        # return State(next_waypoint = self.planner.next_waypoint(),
+        #                 destination = self.env.agent_states[self]['destination'],
+        #                 location = self.env.agent_states[self]['location'])
+        #State = namedtuple("State", ["next_waypoint",,"location"])
+        # return State(next_waypoint = self.planner.next_waypoint(),
+        #                     destination = self.env.agent_states[self]['destination'],
+        #                     location = self.env.agent_states[self]['location'])
 
     def update(self, t):
         """
@@ -167,18 +192,17 @@ class QLearningAgent(Agent):
         ##perform the action and now get the reward
         reward = self.env.act(self, action)
 
-        self.rewards += reward
-
         ## in case of initial configuration don't update the q table, else update q table
-        if self.previous_state!= None:
-            self.updateQTable(self.previous_state,self.previous_action,self.state,reward)
+        if self.previous_reward!= None:
+            self.updateQTable(self.previous_state,self.previous_action,self.state,self.previous_reward)
 
         # store the previous action and state so that we can update the q table on the next iteration
         self.previous_action = action
         self.previous_state = self.state
+        self.previous_reward = reward
         
         # pretty print q table (optional)
-        # pprint.pprint(self.qDict)
+        
         print "QLearningAgent.update(): deadline = {}, inputs = {}, action = {}, reward = {}".format(deadline, inputs, action, reward)  # [debug]
 
 
@@ -216,5 +240,6 @@ class QLearningAgent(Agent):
         """
     
         if((state, action) not in self.qDict): 
-            self.qDict[(state, action)] = 300	
-        self.qDict[(state, action)] = self.qDict[(state, action)] + self.alpha*(reward + self.discount*self.getValue(nextState) - self.qDict[(state, action)]) ##set the previous state's qValue to itself plus alpha*(reward + gamma*value of next state - old q value)
+            self.qDict[(state, action)] = 20.0
+        else:
+            self.qDict[(state, action)] = self.qDict[(state, action)] + self.alpha*(reward + self.discount*self.getValue(nextState) - self.qDict[(state, action)]) ##set the previous state's qValue to itself plus alpha*(reward + gamma*value of next state - old q value)
