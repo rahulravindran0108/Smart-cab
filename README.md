@@ -133,17 +133,71 @@ Does your agent get close to finding an optimal policy, i.e. reach the destinati
 
 ### Identifying the states
 
-For our Q-Learning agent, the states that best represent the car's current state would be the location of the destination, the cab's current location and the next waypoint. Say, that the goal was just forward, and your car needed to go straight, the most important parameters needed are the once mentioned above.
+The Q-learning agent I implemented follows the same algorithm as prescribed in the class. The first step towards designing the q-learning agent was to identify the possible states. At any given point, the cab can sense many percepts out of which we need to select the values that best define the current state of the cab. Here are some of the possible percepts that were candidates for selection:
+- location
+- destination
+- next_waypoint by the planner
+- traffic light
+- traffic data of oncoming, left, right etc.
+
+Among all these inputs, I choose to model the following two state variables:
+- next waypoint
+- traffic light
+
+I went ahead with these two variables for two specific reasons and they are explained below.
+
+#### Performance
+
+In terms of performance both these variables in combination proved to be really useful in performance. Although, among each possible runs using next waypoint seems pointless but it best serves as an input to model the cab w.r.t destination. Some of the ideal candidates in this case would've been the destination variable itself or maybe even the location of the cab. But, here are some of the issues that could come up when using these:
+- destination: Destination changes at each interval, therefore encoding it as a state would defeat the purpose and the agent would not be able to learn properly.
+- location: This is another variable that should not be used to model the state as it would cause problems due to the sheer size of the grid. This would mean that we will have plenty of states and for the q values to converge, it would definitely take more than 100 trials.
+
+Thus, in order to model the destination as a form of the state, I went ahead with next waypoint.
+
+#### Train the cab to perform legal moves
+
+This was another reason that I went ahead with one of my state variables being traffic light. This helps in modelling the traffic rule and also helps in training the cab to perform legal moves. One of the areas to improve upon would be to model the oncoming traffic to act legally using right of way rules.
+
 
 ### Working of the Q-learning agent
 
 The Q-Learning agent works on the basis of the Q-Learning strategy. The code for such an agent is present in the file `QLearning.py`.
 
+The code below describes the overall process involved in the q-learning agent
+
+```
+States :=> (traffic_light,next_waypoint)
+
+learning_variables :=> alpha,gamma,epsilon
+
+While cab has not reached destination:
+	
+	execute makeStateVariable
+	execute getBestAction
+	execute GetReward
+	execute updateQTable
+
+```
+
+The following is the pseudo code for getting the action based on q-value
+
+```
+getBestAction
+	execute flipACoin
+		perform RandomAction
+	else:
+		perform policyAction
+```
+
+The policy action gets the best q-value for the given state. Once tha action is performed, we get the reward which is used to update the q-values for the states. Thus, after plenty of iteration, we will have the true q-values for each state. This will help in training the cab appropriately.
+
 ### Test Results for the Q-learning agent
 
-After having gone through the trial, I noticed a 50% success rate by initializaing the following values:
-alpha = 0.2
-gamma = 0.8
-epsilon = 0.5 and decayed to 0.05 when deadline is less than 15 steps.
+Here is the initial configuration for my Q-learning agent. after having brute forced out the parameters alpha, gamma and epsilon, I decided to use the following run configurations:
 
+- Inital Q-value was set to a hypothetical value of 20, which is more than the highest possible positive reward. This lets us use policy decision each iteration without having to do with the problem of exploration or exploitation. Initially we would be doing random decisions.
+- alpha value was set to 0.9 for a high learning rate, this value was found by iterationg over many possible values for alpha over all the runs.
+- Gamma value was set to 0.35 as once agin it provided a really good performance enhancement when testing over all possible range of values.
+
+After having configured these variables, I ran the q-learning agent and it learnt to drive efficiently after 10-15 runs. You can see that effect in the `testresults.txt`. The cab reached the destination almost 85 times over the 100 runs. This performance was comsistent and can be checked by executing agent.py
 
