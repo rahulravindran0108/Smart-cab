@@ -85,6 +85,7 @@ class QLearningAgent(Agent):
 
     def boltzmanExploration(self):
     	"""
+        TODO:
     	Does a Boltzman Exploration 
 
     	p(s,a) = (e^(Q(s,a)/t))/summation(a*(Q(s,a)/t))
@@ -129,26 +130,6 @@ class QLearningAgent(Agent):
                     bestAction = action
         return bestAction
 
-    def getallPossibleValues(self,label):
-        if label == "next_waypoint":
-            return self.planner.next_waypoint()
-        elif label == "destination":
-            return self.env.agent_states[self]['destination']
-        elif label == "light":
-            return self.env.sense(self)['light']
-        elif label == "oncoming":
-            return self.env.sense(self)['oncoming']
-        elif label == "left":
-            return self.env.sense(self)['left']
-        elif label == "right":
-            return self.env.sense(self)['right']
-        elif label == "location":
-            return self.env.agent_states[self]['location']
-        elif label == "heading":
-            return self.env.agent_states[self]['heading']
-
-
-
     def makeState(self, state):
         """
         This function makes a state and returns 
@@ -162,14 +143,7 @@ class QLearningAgent(Agent):
         State = namedtuple("State", ["light","next_waypoint"])
         return State(light = state['light'],
                         next_waypoint = self.planner.next_waypoint())
-        # State = namedtuple("State", ["next_waypoint","destination","location"])
-        # return State(next_waypoint = self.planner.next_waypoint(),
-        #                 destination = self.env.agent_states[self]['destination'],
-        #                 location = self.env.agent_states[self]['location'])
-        #State = namedtuple("State", ["next_waypoint",,"location"])
-        # return State(next_waypoint = self.planner.next_waypoint(),
-        #                     destination = self.env.agent_states[self]['destination'],
-        #                     location = self.env.agent_states[self]['location'])
+ 
 
     def update(self, t):
         """
