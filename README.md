@@ -93,54 +93,63 @@ The algorithm works in a very naive way by finding a path that maximises the rew
 
 ### How well does it perform ? 
 
-I ran test trials of 10 with enforced deadline and the following table represents the tabular results of each trial:
+In order to test the random, agent - I made it run through a total of 100 trials to check how well it will perform. In terms of performance metric, I have selected the speed with which the cab can deliver its passenger to its destination. The results of the random agent is present in `testResultsRandomAgent`. It can be seen that the agent takes a lot of steps to reach the destination. In the 28 cases of possible 100, the agent reaches almost 28 times however takes around atleast 90% of the avaialble deadline to reach. Following is the result of the last 10 trials for the random agent
 
 Trial #       | Result 
 ------------- | -------------
 1             | Primary agent could not reach destination within deadline!
-2 			  | Primary agent could not reach destination within deadline!
-3 			  | Primary agent could not reach destination within deadline!
-4 			  | Primary agent could not reach destination within deadline!
-5 			  | Primary agent could not reach destination within deadline!
-6 			  | Primary agent could not reach destination within deadline!
-7 			  | Primary agent has reached destination!
-8 			  | Primary agent could not reach destination within deadline!
-9 			  | Primary agent could not reach destination within deadline!
-10 			  | Primary agent could not reach destination within deadline!
+2			  | Primary agent could not reach destination within deadline!
+3			  |	Primary agent could not reach destination within deadline!
+4			  |	Primary agent could not reach destination within deadline!
+5			  |	Primary agent could not reach destination within deadline!
+6			  |	Primary agent has reached destination! : 2/35
+7			  |	Primary agent could not reach destination within deadline!
+8			  |	Primary agent could not reach destination within deadline!
+9			  |	Primary agent could not reach destination within deadline!
+10			  |	Primary agent has reached destination! : 1/20
 
-As you can see, the naive agent was able to only reach the destination once out of 10 test runs.
+Out of all the runs, the agent was able to reach the destination twice, but it took around 33/35 steps and 19/20 steps on the other one. This will serve as the benchmark for our qlearning agent.
 
-
+One of the important things to notice in the result of the random agent is that there are no significant areas of imporvement. If we slice over the runs on 10 trial basis, we get random results. There are times when the agent performs well, sometimes it doesn't. This is beacuse of the way the agent has been programmed. For the agent, it looks for that direction - which gives it the maximum reward. Thus, it takes an intiial exploration for it to learn where it should be headed. Thus, our agent behaves randomly yet greedy. Hence, the results from this run isn't surprising.
 
 ## Task 2
 
 ### Implement Q-Learning
 
-Implement the Q-Learning algorithm by initializing and updating a table/mapping of Q-values at each time step. Now, instead of randomly selecting an action, pick the best action available from the current state based on Q-values, and return that.
+> Implement the Q-Learning algorithm by initializing and updating a table/mapping of Q-values at each time 
+> step. Now, instead of randomly selecting an action, pick the best action available from the current state 
+> based on Q-values, and return that.
 
-Each action generates a corresponding numeric reward or penalty (which may be zero). Your agent should take this into account when updating Q-values. Run it again, and observe the behavior.
+> Each action generates a corresponding numeric reward or penalty (which may be zero). Your agent should take 
+> this into account when updating Q-values. Run it again, and observe the behavior.
 
-What changes do you notice in the agent’s behavior?
+> What changes do you notice in the agent’s behavior?
 
-Enhance the driving agent
+> Enhance the driving agent
 
-Apply the reinforcement learning techniques you have learnt, and tweak the parameters (e.g. learning rate, discount factor, action selection method, etc.), to improve the performance of your agent. Your goal is to get it to a point so that within 100 trials, the agent is able to learn a feasible policy - i.e. reach the destination within the allotted time, with net reward remaining positive.
+> Apply the reinforcement learning techniques you have learnt, and tweak the parameters (e.g. learning rate, 
+> discount factor, action selection method, etc.), to improve the performance of your agent. Your goal is to 
+> get it to a point so that within 100 trials, the agent is able to learn a feasible policy - i.e. reach the 
+> destination within the allotted time, with net reward remaining positive.
 
-Report what changes you made to your basic implementation of Q-Learning to achieve the final version of the agent. How well does it perform?
+> Report what changes you made to your basic implementation of Q-Learning to achieve the final version of the 
+> agent. How well does it perform?
 
-Does your agent get close to finding an optimal policy, i.e. reach the destination in the minimum possible time, and not incur any penalties?
+> Does your agent get close to finding an optimal policy, i.e. reach the destination in the minimum possible 
+> time, and not incur any penalties?
 
 
 ### Identifying the states
 
 The Q-learning agent I implemented follows the same algorithm as prescribed in the class. The first step towards designing the q-learning agent was to identify the possible states. At any given point, the cab can sense many percepts out of which we need to select the values that best define the current state of the cab. Here are some of the possible percepts that were candidates for selection:
-- location
-- destination
+
+- deadline
 - next_waypoint by the planner
 - traffic light
 - traffic data of oncoming, left, right etc.
 
 Among all these inputs, I choose to model the following two state variables:
+
 - next waypoint
 - traffic light
 
@@ -148,11 +157,12 @@ I went ahead with these two variables for two specific reasons and they are expl
 
 #### Performance
 
-In terms of performance both these variables in combination proved to be really useful in performance. Although, among each possible runs using next waypoint seems pointless but it best serves as an input to model the cab w.r.t destination. Some of the ideal candidates in this case would've been the destination variable itself or maybe even the location of the cab. But, here are some of the issues that could come up when using these:
+In terms of performance both these variables in combination proved to be really useful in performance. Although, among each possible runs using next waypoint seems pointless but it best serves as an input to model the cab. Some of the ideal candidates in this case would've been the destination variable itself or maybe even the location of the cab. But, here are some of the issues that could come up when using these:
+
 - destination: Destination changes at each interval, therefore encoding it as a state would defeat the purpose and the agent would not be able to learn properly.
 - location: This is another variable that should not be used to model the state as it would cause problems due to the sheer size of the grid. This would mean that we will have plenty of states and for the q values to converge, it would definitely take more than 100 trials.
 
-Thus, in order to model the destination as a form of the state, I went ahead with next waypoint.
+Also, these variables are not availabe for the cab to sense at any point thus making them void. Thus, in order to model the destination as a form of the state, I went ahead with next waypoint.
 
 #### Train the cab to perform legal moves
 
@@ -200,4 +210,19 @@ Here is the initial configuration for my Q-learning agent. after having brute fo
 - Gamma value was set to 0.35 as once agin it provided a really good performance enhancement when testing over all possible range of values.
 
 After having configured these variables, I ran the q-learning agent and it learnt to drive efficiently after 10-15 runs. You can see that effect in the `testresults.txt`. The cab reached the destination almost 85 times over the 100 runs. This performance was comsistent and can be checked by executing agent.py
+
+### Optimality and the Optimal Policy
+
+Let us now compare the optimality of our q-learnign agent with radnom agent. Our aim is to get the agent trained in terms of two aspects. These two aspects are:
+
+- Getting to the destination fairly quickly
+-  Since the agent can take negative reward steps, we would like the agent to reach the destination with a cumulative positive reward.
+
+Just by looking at the results from our agent in `testResult.txt`, we can see that the cab reaches its destination in fairly less number of steps and it seems to get better over the course of the trials. Thus, it now begins to take the right turns to get to the destination as fast as possible.
+
+Also, the cab always reaches the destination with a large enough cumulative reward. The overall rewards are shorter towards the end due to the fact that the agent makes it to the destination early.
+
+Thus, we can say that our agent has learnt an optimal policy by not only learning to take the right moves but also taking the smallest route without performing many illegal moves.
+
+Note: The agent performs extreemely well by consistently making to the destination without much problem. I have run more than 400 trials and it reaches its destiation more than 80% of the time.
 

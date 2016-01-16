@@ -12,7 +12,7 @@ class QLearningAgent(Agent):
 
     def __init__(self, env):
         super(QLearningAgent, self).__init__(env)  # sets self.env = env, state = None, next_waypoint = None, and a default color
-        self.color = 'red'  # override color
+        self.color = 'red'  # OverflowError(" error")ide color
         self.planner = RoutePlanner(self.env, self)  # simple route planner to get next_waypoint
         ##initialize q table here
         self.qDict = dict()
@@ -24,20 +24,13 @@ class QLearningAgent(Agent):
         self.state = None
         self.previous_action = None
         self.deadline = self.env.get_deadline(self)       
-        self.T = 1.987
         self.previous_reward = None
+        self.cumulativeRewards = 0
 
 
     def flipCoin(self, p ):
         r = random.random()
         return r < p
-
-    def setEpsilon(self):
-        if self.getCurrentDeadline() < 15:
-            self.epsilon = 0.00
-
-    def getCurrentDeadline(self):
-        return self.env.get_deadline(self)
 
     def reset(self, destination=None):
         """
@@ -48,6 +41,7 @@ class QLearningAgent(Agent):
         self.state = None
         self.previous_action = None
         self.epsilon = 0.0
+        self.cumulativeRewards = 0
 
     def getLegalActions(self, state):
         """
@@ -82,28 +76,6 @@ class QLearningAgent(Agent):
                 bestQValue = self.getQValue(state, action)
 
         return bestQValue
-
-    def boltzmanExploration(self):
-    	"""
-        TODO:
-    	Does a Boltzman Exploration 
-
-    	p(s,a) = (e^(Q(s,a)/t))/summation(a*(Q(s,a)/t))
-    	"""
-        summation = 0.0
-        bestAction = None
-        bestProbability = -1
-        possible_actions = self.getLegalActions(self.state)
-        print possible_actions
-        for x in possible_actions:
-            summation+=math.exp(self.getQValue(self.state, x)/self.T)
-
-        for x in possible_actions:
-            probability = math.exp(self.getQValue(self.state, x)/self.T)/summation
-            if probability > bestProbability:
-                bestAction = x
-        
-        print bestAction
 
     def getPolicy(self, state):
         """
@@ -149,13 +121,8 @@ class QLearningAgent(Agent):
         """
         This is the overridden mehtod that basically peforms the necessary update
         """
-        pprint.pprint(self.env.agent_states)
         
         self.next_waypoint = self.planner.next_waypoint()  # from route planner, also displayed by simulator
-        inputs = self.env.sense(self)
-        deadline = self.env.get_deadline(self)
-
-        self.setEpsilon()
 
         ## this is my current state
         self.state = self.makeState(self.env.sense(self))
@@ -174,10 +141,9 @@ class QLearningAgent(Agent):
         self.previous_action = action
         self.previous_state = self.state
         self.previous_reward = reward
-        
+        self.cumulativeRewards += reward
         # pretty print q table (optional)
-        
-        print "QLearningAgent.update(): deadline = {}, inputs = {}, action = {}, reward = {}".format(deadline, inputs, action, reward)  # [debug]
+
 
 
     def getAction(self, state):

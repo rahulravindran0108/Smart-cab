@@ -27,7 +27,8 @@ class Environment(object):
     """Environment within which all agents operate."""
 
     valid_actions = [None, 'forward', 'left', 'right']
-    valid_inputs = {'light': TrafficLight.valid_states, 'oncoming': valid_actions, 'left': valid_actions, 'right': valid_actions}
+    valid_inputs = {'light': TrafficLight.valid_states, 'oncoming':
+                     valid_actions, 'left': valid_actions, 'right': valid_actions}
     valid_headings = [(1, 0), (0, -1), (-1, 0), (0, 1)]  # ENWS
 
     def __init__(self):
@@ -64,7 +65,8 @@ class Environment(object):
 
     def create_agent(self, agent_class, *args, **kwargs):
         agent = agent_class(self, *args, **kwargs)
-        self.agent_states[agent] = {'location': random.choice(self.intersections.keys()), 'heading': (0, 1)}
+        self.agent_states[agent] = {'location': random.choice(self.intersections.keys()),
+                                         'heading': (0, 1)}
         return agent
 
     def set_primary_agent(self, agent, enforce_deadline=False):
@@ -90,16 +92,22 @@ class Environment(object):
 
         start_heading = random.choice(self.valid_headings)
         deadline = self.compute_dist(start, destination) * 5
+        self.deadline_start = deadline
         print "Environment.reset(): Trial set up with start = {}, destination = {}, deadline = {}".format(start, destination, deadline)
 
         # Initialize agent(s)
         for agent in self.agent_states.iterkeys():
             self.agent_states[agent] = {
-                'location': start if agent is self.primary_agent else random.choice(self.intersections.keys()),
-                'heading': start_heading if agent is self.primary_agent else random.choice(self.valid_headings),
-                'destination': destination if agent is self.primary_agent else None,
-                'deadline': deadline if agent is self.primary_agent else None}
-            agent.reset(destination=(destination if agent is self.primary_agent else None))
+                'location': start if agent is self.primary_agent else 
+                                    random.choice(self.intersections.keys()),
+                'heading': start_heading if agent is self.primary_agent else
+                                     random.choice(self.valid_headings),
+                'destination': destination if agent is self.primary_agent else
+                                      None,
+                'deadline': deadline if agent is self.primary_agent else 
+                                      None}
+            agent.reset(destination=(destination if agent is self.primary_agent else
+                                     None))
 
     def step(self):
         #print "Environment.step(): t = {}".format(self.t)  # [debug]
@@ -179,7 +187,7 @@ class Environment(object):
             if move_okay:
                 location = ((location[0] + heading[0] - self.bounds[0]) % (self.bounds[2] - self.bounds[0] + 1) + self.bounds[0],
                             (location[1] + heading[1] - self.bounds[1]) % (self.bounds[3] - self.bounds[1] + 1) + self.bounds[1])  # wrap-around
-                #if self.bounds[0] <= location[0] <= self.bounds[2] and self.bounds[1] <= location[1] <= self.bounds[3]:  # bounded
+
                 state['location'] = location
                 state['heading'] = heading
                 reward = 2 if action == agent.get_next_waypoint() else 0.5
@@ -195,9 +203,12 @@ class Environment(object):
                 self.done = True
                 print "Environment.act(): Primary agent has reached destination!"  # [debug]
                 with open("testResults.txt", "a") as myfile:
-                    myfile.write("Primary agent has reached destination!\n")
+                    myfile.write("Primary agent has reached destination! : "+
+                        str(self.agent_states[self.primary_agent]['deadline'])+"/"+
+                        str(self.deadline_start)+" with a cumulative reward of "+
+                        str(self.primary_agent.cumulativeRewards)+"\n")
             self.status_text = "state: {}\naction: {}\nreward: {}".format(agent.get_state(), action, reward)
-            #print "Environment.act() [POST]: location: {}, heading: {}, action: {}, reward: {}".format(location, heading, action, reward)  # [debug]
+
 
         return reward
 
